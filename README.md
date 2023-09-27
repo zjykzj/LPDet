@@ -1,10 +1,10 @@
-<div align="right">
+<!-- <div align="right">
   Language:
     🇺🇸
   <a title="Chinese" href="./README.zh-CN.md">🇨🇳</a>
-</div>
+</div> -->
 
-<div align="center"><a title="" href="https://github.com/zjykzj/LPDet"><img align="center" src="./imgs/LPDet.png" alt=""></a></div>
+<div align="center"><a title="" href="https://github.com/zjykzj/LPDet"><img align="center" src="./imgs/LPDet.svg" alt=""></a></div>
 
 <p align="center">
   «LPDet» provides a complete license plate detection and recognition algorithm
