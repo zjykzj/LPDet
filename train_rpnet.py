@@ -8,13 +8,11 @@
 """
 
 import argparse
-import math
 import os.path
 
 from tqdm import tqdm
 
 import torch
-import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
@@ -36,6 +34,7 @@ def parse_opt():
 
 
 def train(train_root, val_root, output):
+    print("=> Create Model")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = RPNet(device=device, wr2_pretrained="runs/wR2-e45.pth").to(device)
     criterion = RPNetLoss().to(device)
@@ -44,6 +43,7 @@ def train(train_root, val_root, output):
     optimizer = optim.SGD(model.parameters(), lr=learn_rate, momentum=0.9, weight_decay=5e-4)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
 
+    print("=> Load data")
     train_dataset = CCPD(train_root)
     train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4, drop_last=False,
                                   pin_memory=True)
@@ -51,9 +51,10 @@ def train(train_root, val_root, output):
     val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, drop_last=False,
                                 pin_memory=True)
 
+    print("=> Load evaluator")
     ccpd_evaluator = CCPDEvaluator(only_det=False)
 
-    print("Start training")
+    print("=> Start training")
     epochs = 100
     warmup_epoch = 5
     for epoch in range(1, epochs + 1):
@@ -76,7 +77,7 @@ def train(train_root, val_root, output):
             info = f"Epoch:{epoch} Batch:{idx} LR:{lr:.6f} Loss:{loss:.6f}"
             pbar.set_description(info)
 
-        if epoch % 1 == 0 and epoch > 0:
+        if epoch % 5 == 0 and epoch > 0:
             model.eval()
             save_path = os.path.join(output, f"RPNet-e{epoch}.pth")
             print(f"Save to {save_path}")
