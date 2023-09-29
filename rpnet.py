@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from wr2 import wR2
+from utils.logger import LOGGER
 
 provNum, alphaNum, adNum = 38, 25, 35
 provinces = ["皖", "沪", "津", "渝", "冀", "晋", "蒙", "辽", "吉", "黑", "苏", "浙", "京", "闽", "赣", "鲁", "豫", "鄂",
@@ -45,7 +46,7 @@ class RPNet(nn.Module):
         super().__init__()
         self.wR2 = wR2(num_classes=4)
         if wr2_pretrained is not None:
-            print(f"Loading wR2 pretrained: {wr2_pretrained}")
+            LOGGER.info(f"Loading wR2 pretrained: {wr2_pretrained}")
             self.wR2.load_state_dict(torch.load(wr2_pretrained, map_location='cpu'))
 
         self.c1 = nn.Sequential(
