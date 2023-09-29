@@ -7,7 +7,7 @@
 <div align="center"><a title="" href="https://github.com/zjykzj/LPDet"><img align="center" src="assets/icons/LPDet.svg" alt=""></a></div>
 
 <p align="center">
-  «LPDet» provides a complete license plate detection and recognition algorithm
+  «LPDet» provides a complete License Plate Detection and Recognition algorithm
 <br>
 <br>
   <a href="https://github.com/RichardLitt/standard-readme"><img src="https://img.shields.io/badge/standard--readme-OK-green.svg?style=flat-square" alt=""></a>
