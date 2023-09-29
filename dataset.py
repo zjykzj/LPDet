@@ -17,6 +17,8 @@ from pathlib import Path
 import torch
 from torch.utils.data import Dataset
 
+from utils.logger import LOGGER
+
 
 def data_preprocess(image):
     image = cv2.resize(image, (480, 480))
@@ -34,7 +36,8 @@ def load_data(data_root, pattern='*.json'):
     data_list = list()
 
     p = Path(data_root)
-    for path in tqdm(p.rglob(pattern)):
+    # for path in tqdm(p.rglob(pattern)):
+    for path in p.rglob(pattern):
         data_list.append(str(path).strip())
 
     return data_list
@@ -83,9 +86,9 @@ class CCPD(Dataset):
         self.data_root = data_root
         self.only_lp = only_lp
 
-        print(f"Get Data: {data_root}")
+        LOGGER.info(f"Get Data: {data_root}")
         self.data_list = load_data(data_root, pattern="*.jpg")
-        print(f"Dataset len: {len(self.data_list)}")
+        LOGGER.info(f"Dataset len: {len(self.data_list)}")
 
     def __getitem__(self, index):
         img_path = self.data_list[index]
