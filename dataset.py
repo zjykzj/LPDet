@@ -18,6 +18,16 @@ import torch
 from torch.utils.data import Dataset
 
 
+def data_preprocess(image):
+    image = cv2.resize(image, (480, 480))
+
+    # HWC -> CHW
+    data = torch.from_numpy(image).permute((2, 0, 1)).float()
+    data /= 255.0
+
+    return data
+
+
 def load_data(data_root, pattern='*.json'):
     assert os.path.isdir(data_root)
 
