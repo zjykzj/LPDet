@@ -30,14 +30,14 @@ if __name__ == '__main__':
     img_h, img_w = image.shape[:2]
     data = data_preprocess(image)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     model = wR2(num_classes=4)
     wr2_pretrained = "runs/wR2-e45.pth"
     print(f"Loading wR2 pretrained: {wr2_pretrained}")
     model.load_state_dict(torch.load(wr2_pretrained, map_location='cpu'))
-    model = model.to(device)
     model.eval()
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = model.to(device)
 
     with torch.no_grad():
         outputs = model(data.unsqueeze(0).to(device)).cpu()

@@ -31,7 +31,7 @@ def parse_opt():
 @torch.no_grad()
 def val(val_root):
     model = wR2(num_classes=4)
-    wr2_pretrained = "runs/wR2-e10.pth"
+    wr2_pretrained = "runs/wR2-e45.pth"
     print(f"Loading wR2 pretrained: {wr2_pretrained}")
     model.load_state_dict(torch.load(wr2_pretrained, map_location="cpu"))
     model.eval()
@@ -48,16 +48,14 @@ def val(val_root):
     pbar = tqdm(val_dataloader)
     for idx, (images, targets) in enumerate(pbar):
         images = images.to(device)
-        targets = targets.to(device)
-
         with torch.no_grad():
-            outputs = model(images)
+            outputs = model(images).cpu()
 
         ap, _ = ccpd_evaluator.update(outputs, targets)
-        info = "Idx:%d AP:%f" % (idx, ap)
+        info = f"Batch:{idx} AP:{ap * 100:.3f}"
         pbar.set_description(info)
     ap, _ = ccpd_evaluator.result()
-    print(f"AP: {ap}")
+    print(f"AP:{ap * 100:.3f}")
 
 
 def main():

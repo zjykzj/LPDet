@@ -73,10 +73,10 @@ def train(train_root, val_root, output):
             optimizer.step()
 
             lr = optimizer.param_groups[0]["lr"]
-            info = "Epoch:%d LR:%f Loss:%f" % (epoch, lr, loss)
+            info = f"Epoch:{epoch} Batch:{idx} LR:{lr:.6f} Loss:{loss:.6f}"
             pbar.set_description(info)
 
-        if epoch % 5 == 0 and epoch > 0:
+        if epoch % 1 == 0 and epoch > 0:
             model.eval()
             save_path = os.path.join(output, f"wR2-e{epoch}.pth")
             print(f"Save to {save_path}")
@@ -85,13 +85,11 @@ def train(train_root, val_root, output):
             pbar = tqdm(val_dataloader)
             for idx, (images, targets) in enumerate(pbar):
                 images = images.to(device)
-                targets = targets.to(device)
-
                 with torch.no_grad():
-                    outputs = model(images)
+                    outputs = model(images).cpu()
 
                 ap, _ = ccpd_evaluator.update(outputs, targets)
-                info = "Idx:%d AP:%f" % (idx, ap)
+                info = f"Batch:{idx} AP:{ap * 100:.3f}"
                 pbar.set_description(info)
             ap, _ = ccpd_evaluator.result()
             print(f"AP: {ap}")

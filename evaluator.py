@@ -136,9 +136,11 @@ class CCPDEvaluator:
             lp_name.append(
                 torch.argmax(output[(4 + provNum + alphaNum + adNum * 4):(4 + provNum + alphaNum + adNum * 5)]).item())
 
-            if lp_name == targets[4:].tolist():
+            # print(lp_name, target[4:])
+            if lp_name == target[4:].tolist():
                 classify_correct_num += 1
         self.classify_correct_num += classify_correct_num
+        # print(det_correct_num, classify_correct_num, total_num)
 
         accuracy = classify_correct_num / total_num
         return ap, accuracy
