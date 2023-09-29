@@ -33,7 +33,7 @@
 
 ## Latest News
 
-。。。
+* ***[2023/09/29][v0.1.0](https://github.com/zjykzj/LPDet/releases/tag/v0.1.0). Reconstruct the [872699467/CCPD_CNN](https://github.com/872699467/CCPD_CNN) implementation to adapt to interfaces after Pytorch v1.0.0.***
 
 ## Background
 
@@ -53,16 +53,16 @@ $ pip install -r requirements.txt
 
 ### Train
 
-* Training Data: `CCPD2019/ccpd_base`
-* Val Data: `CCPD2019/ccpd_weather`
+* Train Dataset: `CCPD2019/ccpd_base`
+* Validate Dataset: `CCPD2019/ccpd_weather`
 
-Firstly, train the license plate detection model: wR2
+Firstly, train the license plate detection model: `wR2`
 
 ```shell
 python train_wr2.py ../datasets/CCPD2019/ccpd_base/ ../datasets/CCPD2019/ccpd_weather/ runs
 ```
 
-Then, train both license plate detection and recognition models simultaneously: RPNet
+Then, train both license plate detection and recognition models simultaneously: `RPNet`
 
 ```shell
 python train_rpnet.py ../datasets/CCPD2019/ccpd_base/ ../datasets/CCPD2019/ccpd_weather/ runs
