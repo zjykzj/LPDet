@@ -124,6 +124,8 @@ Save to runs/2_rpnet.jpg
 
 * [detectRecog/CCPD](https://github.com/detectRecog/CCPD)
 * [872699467/CCPD_CNN](https://github.com/872699467/CCPD_CNN)
+* [zjykzj/FastestDet](https://github.com/zjykzj/FastestDet)
+* [zjykzj/YOLOv5](https://github.com/zjykzj/YOLOv5)
 
 ## Contributing
 
