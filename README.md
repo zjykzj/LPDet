@@ -23,6 +23,9 @@
 - [Prepare Data](#prepare-data)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Train](#train)
+  - [Eval](#eval)
+  - [Predict](#predict)
 - [Maintainers](#maintainers)
 - [Thanks](#thanks)
 - [Contributing](#contributing)
@@ -38,15 +41,79 @@ This warehouse provides a complete license plate detection and recognition algor
 
 ## Prepare Data
 
-。。。
+* Download CCPD2019: [BaiduYun Drive(code: ol3j)](https://pan.baidu.com/share/init?surl=JSpc9BZXFlPkXxRK4qUCyw)
 
 ## Installation
 
-。。。
+```shell
+$ pip install -r requirements.txt
+```
 
 ## Usage
 
-。。。
+### Train
+
+* Training Data: `CCPD2019/ccpd_base`
+
+Firstly, train the license plate detection model: wR2
+
+```shell
+python train_wr2.py ../datasets/CCPD2019/ccpd_base/ ../datasets/CCPD2019/ccpd_weather/ runs
+```
+
+Then, train both license plate detection and recognition models simultaneously: RPNet
+
+```shell
+python train_rpnet.py ../datasets/CCPD2019/ccpd_base/ ../datasets/CCPD2019/ccpd_weather/ runs
+```
+
+### Eval
+
+```shell
+$ python eval_wr2.py /data/sdd/CCPD2019/ccpd_weather/
+args: Namespace(val_root='/data/sdd/CCPD2019/ccpd_weather/')
+Loading wR2 pretrained: runs/wR2-e45.pth
+Get Data: /data/sdd/CCPD2019/ccpd_weather/
+9999it [00:00, 39176.07it/s]
+Dataset len: 9999
+Batch:312 AP:100.000: 100%|████████████████████████████| 313/313 [01:22<00:00,  3.82it/s]
+AP:97.760
+```
+
+```shell
+$ CUDA_VISIBLE_DEVICES=9 python eval_rpnet.py /data/sdd/CCPD2019/ccpd_weather/
+args: Namespace(val_root='/data/sdd/CCPD2019/ccpd_weather/')
+Loading wR2 pretrained: runs/wR2-e45.pth
+Loading RPNet pretrained: runs/RPNet-e60.pth
+Get Data: /data/sdd/CCPD2019/ccpd_weather/
+9999it [00:00, 29083.24it/s]
+Dataset len: 9999
+Batch:312 AP:100.000 ACC: 100.000: 100%|█████████████████████████████████████| 313/313 [01:18<00:00,  4.00it/s]
+AP:95.840 ACC: 97.080
+```
+
+### Predict
+
+```shell
+$ python predict_wr2.py assets/2.jpg runs/wR2-e45.pth 
+args: Namespace(image='assets/2.jpg', wr2='runs/wR2-e45.pth')
+Loading wR2 pretrained: runs/wR2-e45.pth
+torch.Size([1, 4])
+Save to runs/2_wr2.jpg
+```
+
+![](./assets/2_wr2.jpg)
+
+```
+$ python predict_rpnet.py ./assets/2.jpg ./runs/RPNet-e60.pth 
+args: Namespace(image='./assets/2.jpg', rpnet='./runs/RPNet-e60.pth')
+Loading RPNet pretrained: ./runs/RPNet-e60.pth
+torch.Size([1, 242])
+lp_name: 皖AT022C
+Save to runs/2_rpnet.jpg
+```
+
+![](./assets/2_rpnet.jpg)
 
 ## Maintainers
 
