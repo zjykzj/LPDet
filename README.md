@@ -54,6 +54,7 @@ $ pip install -r requirements.txt
 ### Train
 
 * Training Data: `CCPD2019/ccpd_base`
+* Val Data: `CCPD2019/ccpd_weather`
 
 Firstly, train the license plate detection model: wR2
 
