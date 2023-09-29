@@ -120,7 +120,7 @@ def train(train_root, val_root, batch_size, output, device):
                 info = f"Epoch:{epoch} Batch:{idx} LR:{lr:.6f} Loss:{loss:.6f}"
                 pbar.set_description(info)
 
-        if RANK in {-1, 0} and epoch % 1 == 0 and epoch > 0:
+        if RANK in {-1, 0} and epoch % 5 == 0 and epoch > 0:
             model.eval()
             save_path = os.path.join(output, f"wR2-e{epoch}.pth")
             LOGGER.info(f"Save to {save_path}")
@@ -151,7 +151,7 @@ def main():
     # DDP mode
     device = select_device(opt.device, batch_size=opt.batch_size)
     if LOCAL_RANK != -1:
-        msg = 'is not compatible with YOLOv5 Multi-GPU DDP training'
+        msg = 'is not compatible with LPDet Multi-GPU DDP training'
         assert opt.batch_size != -1, f'AutoBatch with --batch-size -1 {msg}, please pass a valid --batch-size'
         assert opt.batch_size % WORLD_SIZE == 0, f'--batch-size {opt.batch_size} must be multiple of WORLD_SIZE'
         assert torch.cuda.device_count() > LOCAL_RANK, 'insufficient CUDA devices for DDP command'
