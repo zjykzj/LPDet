@@ -11,17 +11,17 @@ import os
 import cv2
 
 import numpy as np
-from tqdm import tqdm
 from pathlib import Path
 
 import torch
 from torch.utils.data import Dataset
 
 from utils.logger import LOGGER
+from transform import Transform
 
 
-def data_preprocess(image):
-    image = cv2.resize(image, (480, 480))
+def data_preprocess(image, target_size=480):
+    image = cv2.resize(image, (target_size, target_size))
 
     # HWC -> CHW
     data = torch.from_numpy(image).permute((2, 0, 1)).float()
@@ -43,19 +43,7 @@ def load_data(data_root, pattern='*.json'):
     return data_list
 
 
-def build_data(img_path):
-    img = cv2.imread(img_path)
-    img_h, img_w = img.shape[:2]
-    img = cv2.resize(img, (480, 480))
-
-    # HWC -> CHW
-    data = torch.from_numpy(img).permute((2, 0, 1)).float()
-    data /= 255.0
-
-    return data, (img_h, img_w)
-
-
-def build_target(img_path, img_h, img_w):
+def parse_name(img_path, img_h, img_w):
     # img_name: 025-95_113-154&383_386&473-386&473_177&454_154&383_363&402-0_0_22_27_27_33_16-37-15.jpg
     img_name = os.path.basename(img_path)
 
@@ -77,26 +65,53 @@ def build_target(img_path, img_h, img_w):
 
     label.extend([int(x) for x in all_infos[4].split("_")])
 
-    return torch.from_numpy(np.array(label, dtype=float))
+    # return torch.from_numpy(np.array(label, dtype=float))
+    return np.array(label, dtype=float)
 
 
 class CCPD(Dataset):
 
-    def __init__(self, data_root, only_lp=False):
+    def __init__(self, data_root, target_size=480, is_train=True):
         self.data_root = data_root
-        self.only_lp = only_lp
+        self.target_size = target_size
+        self.is_train = is_train
 
-        LOGGER.info(f"Get Data: {data_root}")
+        LOGGER.info(f"Get {'train' if is_train else 'val'} data: {data_root}")
         self.data_list = load_data(data_root, pattern="*.jpg")
         LOGGER.info(f"Dataset len: {len(self.data_list)}")
+
+        self.transform = Transform(is_train=is_train)
 
     def __getitem__(self, index):
         img_path = self.data_list[index]
 
-        image, (img_h, img_w) = build_data(img_path)
-        label = build_target(img_path, img_h, img_w)
+        data, target = self.build_data(img_path)
+        for i in range(1000):
+            if data is None:
+                index = np.random.choice(1000)
+                img_path = self.data_list[index]
+                data, target = self.build_data(img_path)
+            else:
+                break
 
-        return image, label
+        return data, target
 
     def __len__(self):
         return len(self.data_list)
+
+    def build_data(self, img_path):
+        img = cv2.imread(img_path)
+        img_h, img_w = img.shape[:2]
+
+        target = parse_name(img_path, img_h, img_w)
+
+        label = [[0, *target[:4]]]
+        img, labels, _ = self.transform([img], [np.array(label)], self.target_size)
+        if len(labels) == 0:
+            return None, None
+
+        assert len(labels) == 1 and labels.shape[1] == 5, f"{img_path} {labels}"
+        target[:4] = labels[0][1:]
+
+        data = data_preprocess(img, target_size=self.target_size)
+        return data, torch.from_numpy(target)
