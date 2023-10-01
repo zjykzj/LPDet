@@ -47,7 +47,9 @@ class RPNet(nn.Module):
         self.wR2 = wR2(num_classes=4)
         if wr2_pretrained is not None:
             LOGGER.info(f"Loading wR2 pretrained: {wr2_pretrained}")
-            self.wR2.load_state_dict(torch.load(wr2_pretrained, map_location='cpu'))
+            ckpt = torch.load(wr2_pretrained, map_location='cpu')
+            ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
+            self.wR2.load_state_dict(ckpt, strict=True)
 
         self.c1 = nn.Sequential(
             nn.Linear(53248, 128),
