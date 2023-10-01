@@ -21,7 +21,7 @@ chars_x, chars_y = 50, 80
 
 # 1. 加载图像文件
 # image = Image.open(img_path)
-image = Image.open("../assets/1.jpg")
+image = Image.open("../assets/eval/1.jpg")
 # 2. 加载字体并指定字体大小
 # ttf = ImageFont.load_default()  # 默认字体
 ttf = ImageFont.truetype(ttf_path, 30)
