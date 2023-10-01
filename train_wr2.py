@@ -7,10 +7,10 @@
 @description:
 
 Usage - Single-GPU training:
-    $ python train_wr2.py ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs
+    $ python train_wr2.py ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs/train_wr2
 
 Usage - Multi-GPU DDP training:
-    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_wr2.py --device 0,1,2,3 ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs
+    $ python -m torch.distributed.run --nproc_per_node 4 --master_port 32512 train_wr2.py --device 0,1,2,3 ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs/train_wr2_ddp
 
 """
 
@@ -32,6 +32,7 @@ from evaluator import CCPDEvaluator
 from utils.torchutil import select_device
 from utils.ddputil import smart_DDP
 from utils.logger import LOGGER
+from utils.general import init_seeds
 
 LOCAL_RANK = int(os.getenv('LOCAL_RANK', -1))  # https://pytorch.org/docs/stable/elastic/run.html
 RANK = int(os.getenv('RANK', -1))
@@ -44,14 +45,24 @@ def parse_opt():
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
     parser.add_argument('output', metavar='OUTPUT', type=str, help='path to output')
 
-    parser.add_argument('--batch-size', type=int, default=32, help='total batch size for all GPUs, -1 for autobatch')
+    parser.add_argument('--batch-size', type=int, default=64, help='total batch size for all GPUs, -1 for autobatch')
 
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
+    parser.add_argument('--seed', type=int, default=0, help='Global training seed')
     parser.add_argument('--local_rank', type=int, default=-1, help='Automatic DDP Multi-GPU argument, do not modify')
 
     args = parser.parse_args()
     LOGGER.info(f"args: {args}")
     return args
+
+
+def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len_epoch: int) -> None:
+    """LR schedule that should yield 76% converged accuracy with batch size 256"""
+    # Warmup
+    lr = lr * float(1 + step + epoch * len_epoch) / (warmup_epoch * len_epoch)
+
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
 
 
 def train(train_root, val_root, batch_size, output, device):
@@ -60,12 +71,13 @@ def train(train_root, val_root, batch_size, output, device):
     model = wR2(num_classes=4).to(device)
     criterion = wR2Loss().to(device)
 
-    learn_rate = 0.001
+    learn_rate = 0.002 * WORLD_SIZE
+    LOGGER.info(f"Final learning rate: {learn_rate}")
     optimizer = optim.SGD(model.parameters(), lr=learn_rate, momentum=0.9, weight_decay=5e-4)
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[40, 70, 90])
 
     LOGGER.info("=> Load data")
-    train_dataset = CCPD(train_root)
+    train_dataset = CCPD(train_root, is_train=True, target_size=480)
     sampler = None if LOCAL_RANK == -1 else distributed.DistributedSampler(train_dataset, shuffle=True)
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=batch_size,
@@ -75,7 +87,7 @@ def train(train_root, val_root, batch_size, output, device):
                                   drop_last=False,
                                   pin_memory=True)
     if RANK in {-1, 0}:
-        val_dataset = CCPD(val_root)
+        val_dataset = CCPD(val_root, is_train=False, target_size=480)
         val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=4, drop_last=False,
                                     pin_memory=True)
 
@@ -102,6 +114,7 @@ def train(train_root, val_root, batch_size, output, device):
         pbar = train_dataloader
         if LOCAL_RANK in {-1, 0}:
             pbar = tqdm(pbar)
+        optimizer.zero_grad()
         for idx, (images, targets) in enumerate(pbar):
             images = images.to(device)
             targets = targets.to(device)
@@ -109,11 +122,15 @@ def train(train_root, val_root, batch_size, output, device):
             outputs = model(images)
 
             loss = criterion(outputs, targets)
-            if RANK != -1:
-                loss *= WORLD_SIZE  # gradient averaged between devices in DDP mode
-            optimizer.zero_grad()
+            # if RANK != -1:
+            #     loss *= WORLD_SIZE  # gradient averaged between devices in DDP mode
             loss.backward()
+
+            if epoch <= warmup_epoch:
+                adjust_learning_rate(learn_rate, warmup_epoch, optimizer, epoch - 1, idx, len(train_dataloader))
+
             optimizer.step()
+            optimizer.zero_grad()
 
             if RANK in {-1, 0}:
                 lr = optimizer.param_groups[0]["lr"]
@@ -141,9 +158,7 @@ def train(train_root, val_root, batch_size, output, device):
     LOGGER.info(f'\n{epochs} epochs completed in {(time.time() - t0) / 3600:.3f} hours.')
 
 
-def main():
-    opt = parse_opt()
-
+def main(opt):
     output = opt.output
     if not os.path.exists(output):
         os.makedirs(output)
@@ -159,8 +174,11 @@ def main():
         device = torch.device('cuda', LOCAL_RANK)
         dist.init_process_group(backend="nccl" if dist.is_nccl_available() else "gloo")
 
+    init_seeds(opt.seed + 1 + RANK, deterministic=True)
+    # LOGGER.info(f"LOCAL_RANK: {LOCAL_RANK} RANK: {RANK} WORLD_SIZE: {WORLD_SIZE}")
     train(opt.train_root, opt.val_root, opt.batch_size, output, device)
 
 
 if __name__ == '__main__':
-    main()
+    opt = parse_opt()
+    main(opt)
