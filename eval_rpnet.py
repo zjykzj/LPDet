@@ -20,7 +20,9 @@ from evaluator import CCPDEvaluator
 
 
 def parse_opt():
-    parser = argparse.ArgumentParser(description='Training RPNet')
+    parser = argparse.ArgumentParser(description='Eval RPNet')
+    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/wR2-e45.pth",
+                        help='path to pretrained model')
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
 
     args = parser.parse_args()
@@ -29,13 +31,16 @@ def parse_opt():
 
 
 @torch.no_grad()
-def val(val_root):
+def val(val_root, rpnet_pretrained):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = RPNet(device, wr2_pretrained="runs/wR2-e45.pth")
-    rpnet_pretrained = "runs/RPNet-e60.pth"
+    # model = RPNet(device, wr2_pretrained="runs/wR2-e45.pth")
+    # rpnet_pretrained = "runs/RPNet-e60.pth"
+    model = RPNet(device, wr2_pretrained=None)
     print(f"Loading RPNet pretrained: {rpnet_pretrained}")
-    model.load_state_dict(torch.load(rpnet_pretrained, map_location='cpu'))
+    ckpt = torch.load(rpnet_pretrained, map_location='cpu')
+    ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
+    model.load_state_dict(ckpt, strict=True)
     model = model.to(device)
     model.eval()
 
@@ -61,7 +66,7 @@ def val(val_root):
 def main():
     args = parse_opt()
 
-    val(args.val_root)
+    val(args.val_root, args.pretrained)
 
 
 if __name__ == '__main__':

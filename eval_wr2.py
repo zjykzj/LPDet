@@ -20,7 +20,9 @@ from evaluator import CCPDEvaluator
 
 
 def parse_opt():
-    parser = argparse.ArgumentParser(description='Training wR2')
+    parser = argparse.ArgumentParser(description='Eval wR2')
+    parser.add_argument('pretrained', metavar='PRETRAINED', type=str, default="runs/wR2-e45.pth",
+                        help='path to pretrained model')
     parser.add_argument('val_root', metavar='DIR', type=str, help='path to val dataset')
 
     args = parser.parse_args()
@@ -29,17 +31,19 @@ def parse_opt():
 
 
 @torch.no_grad()
-def val(val_root):
+def val(val_root, wr2_pretrained):
     model = wR2(num_classes=4)
-    wr2_pretrained = "runs/wR2-e45.pth"
+    # wr2_pretrained = "runs/wR2-e45.pth"
     print(f"Loading wR2 pretrained: {wr2_pretrained}")
-    model.load_state_dict(torch.load(wr2_pretrained, map_location="cpu"))
+    ckpt = torch.load(wr2_pretrained, map_location='cpu')
+    ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
+    model.load_state_dict(ckpt, strict=True)
     model.eval()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = model.to(device)
 
-    val_dataset = CCPD(val_root)
+    val_dataset = CCPD(val_root, target_size=480, is_train=False)
     val_dataloader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4, drop_last=False,
                                 pin_memory=True)
 
@@ -61,7 +65,7 @@ def val(val_root):
 def main():
     args = parse_opt()
 
-    val(args.val_root)
+    val(args.val_root, args.pretrained)
 
 
 if __name__ == '__main__':
