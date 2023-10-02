@@ -144,6 +144,7 @@ def train(train_root, val_root, batch_size, output, device, wr2_pretrained):
             LOGGER.info(f"Save to {save_path}")
             torch.save(model.state_dict(), save_path)
 
+            ccpd_evaluator.reset()
             pbar = tqdm(val_dataloader)
             for idx, (images, targets) in enumerate(pbar):
                 images = images.to(device)

@@ -100,6 +100,11 @@ class CCPDEvaluator:
         self.classify_correct_num = 0.
         self.total_num = 0.
 
+    def reset(self):
+        self.det_correct_num = 0.
+        self.classify_correct_num = 0.
+        self.total_num = 0.
+
     def update(self, outputs, targets):
         assert len(outputs) == len(targets)
 
