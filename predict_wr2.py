@@ -21,10 +21,10 @@ from dataset import data_preprocess
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Predict wR2')
-    parser.add_argument('image', metavar='IMAGE', type=str, default="./assets/1.jpg",
-                        help='path to image')
     parser.add_argument('wr2', metavar='wR2', type=str, default="./runs/wR2-e45.pth",
                         help='path to pretrained path')
+    parser.add_argument('image', metavar='IMAGE', type=str, default="./assets/1.jpg",
+                        help='path to image')
 
     args = parser.parse_args()
     print(f"args: {args}")
@@ -44,7 +44,9 @@ if __name__ == '__main__':
     # wr2_pretrained = "runs/wR2-e45.pth"
     wr2_pretrained = args.wr2
     print(f"Loading wR2 pretrained: {wr2_pretrained}")
-    model.load_state_dict(torch.load(wr2_pretrained, map_location='cpu'))
+    ckpt = torch.load(wr2_pretrained, map_location='cpu')
+    ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
+    model.load_state_dict(ckpt, strict=True)
     model.eval()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

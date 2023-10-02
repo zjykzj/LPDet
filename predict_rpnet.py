@@ -24,10 +24,10 @@ from dataset import data_preprocess
 
 def parse_opt():
     parser = argparse.ArgumentParser(description='Predict RPNet')
-    parser.add_argument('image', metavar='IMAGE', type=str, default="./assets/1.jpg",
-                        help='path to image')
     parser.add_argument('rpnet', metavar='RPNet', type=str, default="./runs/RPNet-e60.pth",
                         help='path to pretrained path')
+    parser.add_argument('image', metavar='IMAGE', type=str, default="./assets/1.jpg",
+                        help='path to image')
 
     args = parser.parse_args()
     print(f"args: {args}")
@@ -49,7 +49,9 @@ if __name__ == '__main__':
     # rpnet_pretrained = "runs/RPNet-e60.pth"
     rpnet_pretrained = args.rpnet
     print(f"Loading RPNet pretrained: {rpnet_pretrained}")
-    model.load_state_dict(torch.load(rpnet_pretrained, map_location='cpu'))
+    ckpt = torch.load(rpnet_pretrained, map_location='cpu')
+    ckpt = {k.replace("module.", ""): v for k, v in ckpt.items()}
+    model.load_state_dict(ckpt, strict=True)
     model = model.to(device)
     model.eval()
 
