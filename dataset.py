@@ -105,13 +105,13 @@ class CCPD(Dataset):
 
         target = parse_name(img_path, img_h, img_w)
 
-        label = [[0, *target[:4]]]
-        img, labels, _ = self.transform([img], [np.array(label)], self.target_size)
-        if len(labels) == 0:
-            return None, None
-
-        assert len(labels) == 1 and labels.shape[1] == 5, f"{img_path} {labels}"
-        target[:4] = labels[0][1:]
+        # labels = np.array([[0, *target[:4]]])
+        # img, labels, _ = self.transform([img], [labels], self.target_size)
+        # if len(labels) == 0:
+        #     return None, None
+        #
+        # assert len(labels) == 1 and labels.shape[1] == 5, f"{img_path} {labels}"
+        # target[:4] = labels[0][1:]
 
         data = data_preprocess(img, target_size=self.target_size)
         return data, torch.from_numpy(target)
