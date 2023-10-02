@@ -59,62 +59,61 @@ $ pip install -r requirements.txt
 Firstly, train the license plate detection model: `wR2`
 
 ```shell
-python train_wr2.py ../datasets/CCPD2019/ccpd_base/ ../datasets/CCPD2019/ccpd_weather/ runs
+python -m torch.distributed.run --nproc_per_node 4 --master_port 16233 train_wr2.py --device 4,5,6,7 ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs/train
+_wr2_ddp
 ```
 
 Then, train both license plate detection and recognition models simultaneously: `RPNet`
 
 ```shell
-python train_rpnet.py ../datasets/CCPD2019/ccpd_base/ ../datasets/CCPD2019/ccpd_weather/ runs
+python -m torch.distributed.run --nproc_per_node 4 --master_port 32312 train_rpnet.py --device 0,1,2,3 --wr2-pretrained runs/train_wr2_ddp/wR2-e95.pth ../datasets/CCPD2019/ccpd_bas
+e ../datasets/CCPD2019/ccpd_weather runs/train_rpnet_ddp
 ```
 
 ### Eval
 
 ```shell
-$ python eval_wr2.py /data/sdd/CCPD2019/ccpd_weather/
-args: Namespace(val_root='/data/sdd/CCPD2019/ccpd_weather/')
-Loading wR2 pretrained: runs/wR2-e45.pth
-Get Data: /data/sdd/CCPD2019/ccpd_weather/
-9999it [00:00, 39176.07it/s]
+$ eval_wr2.py runs/train_wr2_ddp/wR2-e100.pth ../datasets/CCPD2019/ccpd_weather/
+args: Namespace(pretrained='runs/train_wr2_ddp/wR2-e100.pth', val_root='/data/sdd/CCPD2019/ccpd_weather/')
+Loading wR2 pretrained: runs/train_wr2_ddp/wR2-e100.pth
+Get val data: /data/sdd/CCPD2019/ccpd_weather/
 Dataset len: 9999
-Batch:312 AP:100.000: 100%|████████████████████████████| 313/313 [01:22<00:00,  3.82it/s]
-AP:97.760
+Batch:312 AP:100.000: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [01:40<00:00,  3.12it/s]
+AP:97.180
 ```
 
 ```shell
-$ CUDA_VISIBLE_DEVICES=9 python eval_rpnet.py /data/sdd/CCPD2019/ccpd_weather/
-args: Namespace(val_root='/data/sdd/CCPD2019/ccpd_weather/')
-Loading wR2 pretrained: runs/wR2-e45.pth
-Loading RPNet pretrained: runs/RPNet-e60.pth
-Get Data: /data/sdd/CCPD2019/ccpd_weather/
-9999it [00:00, 29083.24it/s]
+$ python eval_rpnet.py runs/train_rpnet_ddp/RPNet-e45.pth ../datasets/CCPD2019/ccpd_weather/
+args: Namespace(pretrained='runs/train_rpnet_ddp/RPNet-e45.pth', val_root='../datasets/CCPD2019/ccpd_weather/')
+Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e45.pth
+Get train data: ../datasets/CCPD2019/ccpd_weather/
 Dataset len: 9999
-Batch:312 AP:100.000 ACC: 100.000: 100%|█████████████████████████████████████| 313/313 [01:18<00:00,  4.00it/s]
-AP:95.840 ACC: 97.080
+Batch:312 AP:100.000 ACC: 100.000: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [00:53<00:00,  5.83it/s]
+AP:96.810 ACC: 98.030
 ```
 
 ### Predict
 
 ```shell
-$ python predict_wr2.py assets/2.jpg runs/wR2-e45.pth 
-args: Namespace(image='assets/2.jpg', wr2='runs/wR2-e45.pth')
-Loading wR2 pretrained: runs/wR2-e45.pth
+$ python predict_wr2.py runs/train_wr2_ddp/wR2-e100.pth assets/eval/3.jpg 
+args: Namespace(image='assets/eval/3.jpg', wr2='runs/train_wr2_ddp/wR2-e100.pth')
+Loading wR2 pretrained: runs/train_wr2_ddp/wR2-e100.pth
 torch.Size([1, 4])
-Save to runs/2_wr2.jpg
+Save to runs/3_wr2.jpg
 ```
 
-![](./assets/2_wr2.jpg)
+![](./assets/3_wr2.jpg)
 
 ```
-$ python predict_rpnet.py ./assets/2.jpg ./runs/RPNet-e60.pth 
-args: Namespace(image='./assets/2.jpg', rpnet='./runs/RPNet-e60.pth')
-Loading RPNet pretrained: ./runs/RPNet-e60.pth
+$ python predict_rpnet.py runs/train_rpnet_ddp/RPNet-e45.pth assets/eval/3.jpg 
+args: Namespace(image='assets/eval/3.jpg', rpnet='runs/train_rpnet_ddp/RPNet-e45.pth')
+Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e45.pth
 torch.Size([1, 242])
-lp_name: 皖AT022C
-Save to runs/2_rpnet.jpg
+lp_name: 皖AMK620
+Save to runs/3_rpnet.jpg
 ```
 
-![](./assets/2_rpnet.jpg)
+![](./assets/3_rpnet.jpg)
 
 ## Maintainers
 
