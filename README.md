@@ -74,47 +74,47 @@ e ../datasets/CCPD2019/ccpd_weather runs/train_rpnet_ddp
 ### Eval
 
 ```shell
-$ eval_wr2.py runs/train_wr2_ddp/wR2-e100.pth ../datasets/CCPD2019/ccpd_weather/
+$ python eval_wr2.py runs/train_wr2_ddp/wR2-e100.pth /data/sdd/CCPD2019/ccpd_weather/
 args: Namespace(pretrained='runs/train_wr2_ddp/wR2-e100.pth', val_root='/data/sdd/CCPD2019/ccpd_weather/')
 Loading wR2 pretrained: runs/train_wr2_ddp/wR2-e100.pth
 Get val data: /data/sdd/CCPD2019/ccpd_weather/
 Dataset len: 9999
-Batch:312 AP:100.000: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [01:40<00:00,  3.12it/s]
-AP:97.180
+Batch:312 AP:100.000: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [00:53<00:00,  5.89it/s]
+AP:96.650
 ```
 
 ```shell
-$ python eval_rpnet.py runs/train_rpnet_ddp/RPNet-e45.pth ../datasets/CCPD2019/ccpd_weather/
-args: Namespace(pretrained='runs/train_rpnet_ddp/RPNet-e45.pth', val_root='../datasets/CCPD2019/ccpd_weather/')
-Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e45.pth
+$ python eval_rpnet.py runs/train_rpnet_ddp/RPNet-e100.pth ../datasets/CCPD2019/ccpd_weather/
+args: Namespace(pretrained='runs/train_rpnet_ddp/RPNet-e100.pth', val_root='../datasets/CCPD2019/ccpd_weather/')
+Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e100.pth
 Get train data: ../datasets/CCPD2019/ccpd_weather/
 Dataset len: 9999
-Batch:312 AP:100.000 ACC: 100.000: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [00:53<00:00,  5.83it/s]
-AP:96.810 ACC: 98.030
+Batch:312 AP:100.000 ACC: 100.000: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [00:52<00:00,  5.94it/s]
+AP:97.400 ACC: 97.930
 ```
 
 ### Predict
 
 ```shell
-$ python predict_wr2.py runs/train_wr2_ddp/wR2-e100.pth assets/eval/3.jpg 
-args: Namespace(image='assets/eval/3.jpg', wr2='runs/train_wr2_ddp/wR2-e100.pth')
+$ python predict_wr2.py runs/train_wr2_ddp/wR2-e100.pth assets/eval/4.jpg 
+args: Namespace(image='assets/eval/4.jpg', wr2='runs/train_wr2_ddp/wR2-e100.pth')
 Loading wR2 pretrained: runs/train_wr2_ddp/wR2-e100.pth
 torch.Size([1, 4])
-Save to runs/3_wr2.jpg
+Save to runs/4_wr2.jpg
 ```
 
-![](./assets/3_wr2.jpg)
+![](./assets/4_wr2.jpg)
 
 ```
-$ python predict_rpnet.py runs/train_rpnet_ddp/RPNet-e45.pth assets/eval/3.jpg 
-args: Namespace(image='assets/eval/3.jpg', rpnet='runs/train_rpnet_ddp/RPNet-e45.pth')
-Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e45.pth
+$ python predict_rpnet.py runs/train_rpnet_ddp/RPNet-e100.pth assets/eval/4.jpg 
+args: Namespace(image='assets/eval/4.jpg', rpnet='runs/train_rpnet_ddp/RPNet-e100.pth')
+Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e100.pth
 torch.Size([1, 242])
-lp_name: 皖AMK620
-Save to runs/3_rpnet.jpg
+lp_name: 皖A256R2
+Save to runs/4_rpnet.jpg
 ```
 
-![](./assets/3_rpnet.jpg)
+![](./assets/4_rpnet.jpg)
 
 ## Maintainers
 
