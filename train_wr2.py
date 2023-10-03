@@ -66,6 +66,9 @@ def adjust_learning_rate(lr, warmup_epoch, optimizer, epoch: int, step: int, len
 
 
 def train(train_root, val_root, batch_size, output, device):
+    if RANK in {-1, 0} and not os.path.exists(output):
+        os.makedirs(output)
+
     LOGGER.info("=> Create Model")
     # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = wR2(num_classes=4).to(device)
@@ -96,6 +99,8 @@ def train(train_root, val_root, batch_size, output, device):
 
     LOGGER.info("=> Start training")
     t0 = time.time()
+    amp = True
+    scaler = torch.cuda.amp.GradScaler(enabled=amp)
 
     # DDP mode
     cuda = device.type != 'cpu'
@@ -119,17 +124,16 @@ def train(train_root, val_root, batch_size, output, device):
             images = images.to(device)
             targets = targets.to(device)
 
-            outputs = model(images)
-
-            loss = criterion(outputs, targets)
-            # if RANK != -1:
-            #     loss *= WORLD_SIZE  # gradient averaged between devices in DDP mode
-            loss.backward()
+            with torch.cuda.amp.autocast(amp):
+                outputs = model(images)
+                loss = criterion(outputs, targets)
+            scaler.scale(loss).backward()
 
             if epoch <= warmup_epoch:
                 adjust_learning_rate(learn_rate, warmup_epoch, optimizer, epoch - 1, idx, len(train_dataloader))
 
-            optimizer.step()
+            scaler.step(optimizer)  # optimizer.step
+            scaler.update()
             optimizer.zero_grad()
 
             if RANK in {-1, 0}:
@@ -156,14 +160,11 @@ def train(train_root, val_root, batch_size, output, device):
             ap, _ = ccpd_evaluator.result()
             LOGGER.info(f"AP: {ap * 100:.3f}")
         scheduler.step()
+        torch.cuda.empty_cache()
     LOGGER.info(f'\n{epochs} epochs completed in {(time.time() - t0) / 3600:.3f} hours.')
 
 
 def main(opt):
-    output = opt.output
-    if not os.path.exists(output):
-        os.makedirs(output)
-
     # DDP mode
     device = select_device(opt.device, batch_size=opt.batch_size)
     if LOCAL_RANK != -1:
@@ -177,7 +178,7 @@ def main(opt):
 
     init_seeds(opt.seed + 1 + RANK, deterministic=True)
     # LOGGER.info(f"LOCAL_RANK: {LOCAL_RANK} RANK: {RANK} WORLD_SIZE: {WORLD_SIZE}")
-    train(opt.train_root, opt.val_root, opt.batch_size, output, device)
+    train(opt.train_root, opt.val_root, opt.batch_size, opt.output, device)
 
 
 if __name__ == '__main__':
