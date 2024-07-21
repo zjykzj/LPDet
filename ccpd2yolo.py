@@ -64,7 +64,7 @@ def parse_name(img_path, img_h, img_w):
 
 
 def show_image():
-    img_path = "../datasets/ccpd/CCPD2020/0230045572917-78_82-212&434_403&555-403&512_217&555_212&468_399&434-1_0_5_30_27_25_25_24-183-25.jpg"
+    img_path = "./assets/ccpd_green/02625-94_253-242&460_494&565-494&565_256&530_242&460_485&480-0_0_3_24_24_29_25_32-76-47.jpg"
     img = cv2.imread(img_path)
     img_h, img_w = img.shape[:2]
 
