@@ -1,0 +1,3 @@
+[submodule "crnn_ctc"]
+	path = crnn_ctc
+	url = https://github.com/zjykzj/crnn-ctc.git
