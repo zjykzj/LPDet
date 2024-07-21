@@ -20,7 +20,7 @@ Implementing license plate detection, segmentation, and recognition functions ba
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
-- [Latest News](#latest-news)
+- [News🚀🚀🚀](#news)
 - [Background](#background)
 - [Detect + Seg](#detect--seg)
   - [Train](#train)
@@ -32,11 +32,13 @@ Implementing license plate detection, segmentation, and recognition functions ba
 - [Contributing](#contributing)
 - [License](#license)
 
-## Latest News
+## News🚀🚀🚀
 
-* ***[2023/10/03][v0.3.0](https://github.com/zjykzj/LPDet/releases/tag/v0.3.0). Support for Automatic Mixed Precision (AMP) training.***
-* ***[2023/10/02][v0.2.0](https://github.com/zjykzj/LPDet/releases/tag/v0.2.0). Support for distributed training with multi-GPUs.***
-* ***[2023/09/29][v0.1.0](https://github.com/zjykzj/LPDet/releases/tag/v0.1.0). Reconstruct the [872699467/CCPD_CNN](https://github.com/872699467/CCPD_CNN) implementation to adapt to interfaces after Pytorch  v1.0.0.***
+| Version                                                       | Release Date | Major Updates                                                                                                                           |
+|---------------------------------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [v0.2.0](https://github.com/zjykzj/LPDet/releases/tag/v0.3.0) | 2023/10/03   | Support for Automatic Mixed Precision (AMP) training.                                                                                   |
+| [v0.2.0](https://github.com/zjykzj/LPDet/releases/tag/v0.2.0) | 2023/10/02   | Support for distributed training with multi-GPUs.                                                                                       |
+| [v0.1.0](https://github.com/zjykzj/LPDet/releases/tag/v0.1.0) | 2023/09/29   | Reconstruct the [872699467/CCPD_CNN](https://github.com/872699467/CCPD_CNN) implementation to adapt to interfaces after Pytorch v1.0.0. |
 
 ## Background
 
