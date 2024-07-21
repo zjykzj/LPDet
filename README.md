@@ -15,17 +15,18 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
+Implementing license plate detection, segmentation, and recognition functions based on [YOLOv5-v7.0](https://github.com/ultralytics/yolov5/releases/tag/v7.0) and [CRNN-CTC](https://github.com/zjykzj/crnn-ctc)
+
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
 - [Latest News](#latest-news)
 - [Background](#background)
-- [Prepare Data](#prepare-data)
-- [Installation](#installation)
-- [Usage](#usage)
+- [Detect + Seg](#detect--seg)
   - [Train](#train)
   - [Eval](#eval)
   - [Predict](#predict)
+- [Add recognition](#add-recognition)
 - [Maintainers](#maintainers)
 - [Thanks](#thanks)
 - [Contributing](#contributing)
@@ -35,87 +36,51 @@
 
 * ***[2023/10/03][v0.3.0](https://github.com/zjykzj/LPDet/releases/tag/v0.3.0). Support for Automatic Mixed Precision (AMP) training.***
 * ***[2023/10/02][v0.2.0](https://github.com/zjykzj/LPDet/releases/tag/v0.2.0). Support for distributed training with multi-GPUs.***
-* ***[2023/09/29][v0.1.0](https://github.com/zjykzj/LPDet/releases/tag/v0.1.0). Reconstruct the [872699467/CCPD_CNN](https://github.com/872699467/CCPD_CNN) implementation to adapt to interfaces after Pytorch v1.0.0.***
+* ***[2023/09/29][v0.1.0](https://github.com/zjykzj/LPDet/releases/tag/v0.1.0). Reconstruct the [872699467/CCPD_CNN](https://github.com/872699467/CCPD_CNN) implementation to adapt to interfaces after Pytorch  v1.0.0.***
 
 ## Background
 
 This warehouse provides a complete license plate detection and recognition algorithm, with the goal of perfectly detecting and recognizing all license plates and license plate information.
 
-## Prepare Data
+## Detect + Seg
 
-* Download CCPD2019: [BaiduYun Drive(code: ol3j)](https://pan.baidu.com/share/init?surl=JSpc9BZXFlPkXxRK4qUCyw)
-
-## Installation
-
-```shell
-$ pip install -r requirements.txt
-```
-
-## Usage
+Firstly, download CCPD2020([Google Drive](https://drive.google.com/file/d/1m8w1kFxnCEiqz_-t2vTcgrgqNIv986PR/view?usp=sharing)); Then, use the [ccpd2yolo.py](./ccpd2yolo.py) script to convert the dataset to YOLO format.
 
 ### Train
 
-* Train Dataset: `CCPD2019/ccpd_base`
-* Validate Dataset: `CCPD2019/ccpd_weather`
-
-Firstly, train the license plate detection model: `wR2`
-
 ```shell
-python -m torch.distributed.run --nproc_per_node 4 --master_port 16233 train_wr2.py --device 4,5,6,7 ../datasets/CCPD2019/ccpd_base ../datasets/CCPD2019/ccpd_weather runs/train
-_wr2_ddp
-```
-
-Then, train both license plate detection and recognition models simultaneously: `RPNet`
-
-```shell
-python -m torch.distributed.run --nproc_per_node 4 --master_port 32312 train_rpnet.py --device 0,1,2,3 --wr2-pretrained runs/train_wr2_ddp/wR2-e95.pth ../datasets/CCPD2019/ccpd_bas
-e ../datasets/CCPD2019/ccpd_weather runs/train_rpnet_ddp
+$ python segment/train.py --data ccpd-seg.yaml --weights yolov5n-seg.pt --img 640
 ```
 
 ### Eval
 
 ```shell
-$ python eval_wr2.py runs/train_wr2_ddp/wR2-e100.pth /data/sdd/CCPD2019/ccpd_weather/
-args: Namespace(pretrained='runs/train_wr2_ddp/wR2-e100.pth', val_root='/data/sdd/CCPD2019/ccpd_weather/')
-Loading wR2 pretrained: runs/train_wr2_ddp/wR2-e100.pth
-Get val data: /data/sdd/CCPD2019/ccpd_weather/
-Dataset len: 9999
-Batch:312 AP:100.000: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [00:53<00:00,  5.89it/s]
-AP:96.650
-```
-
-```shell
-$ python eval_rpnet.py runs/train_rpnet_ddp/RPNet-e100.pth ../datasets/CCPD2019/ccpd_weather/
-args: Namespace(pretrained='runs/train_rpnet_ddp/RPNet-e100.pth', val_root='../datasets/CCPD2019/ccpd_weather/')
-Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e100.pth
-Get train data: ../datasets/CCPD2019/ccpd_weather/
-Dataset len: 9999
-Batch:312 AP:100.000 ACC: 100.000: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 313/313 [00:52<00:00,  5.94it/s]
-AP:97.400 ACC: 97.930
+$ python segment/val.py --weights runs/yolov5n-seg_ccpd-green.pt --data ccpd-seg.yaml --img 640
 ```
 
 ### Predict
 
 ```shell
-$ python predict_wr2.py runs/train_wr2_ddp/wR2-e100.pth assets/eval/4.jpg 
-args: Namespace(image='assets/eval/4.jpg', wr2='runs/train_wr2_ddp/wR2-e100.pth')
-Loading wR2 pretrained: runs/train_wr2_ddp/wR2-e100.pth
-torch.Size([1, 4])
-Save to runs/4_wr2.jpg
+$ python segment/predict.py --weights runs/yolov5n-seg_ccpd-green.pt --source ./assets/ccpd_green/
 ```
 
-![](./assets/4_wr2.jpg)
+<img src="assets/results/predict/02625-94_253-242&460_494&565-494&565_256&530_242&460_485&480-0_0_3_24_24_29_25_32-76-47.jpg" alt="Image1" style="width: 200px;"> <img src="assets/results/predict/03521267361111111-104_252-253&406_497&551-493&551_257&476_253&406_497&474-0_0_3_27_33_33_31_24-135-132.jpg" alt="Image 2" style="width: 200px;">
 
-```
-$ python predict_rpnet.py runs/train_rpnet_ddp/RPNet-e100.pth assets/eval/4.jpg 
-args: Namespace(image='assets/eval/4.jpg', rpnet='runs/train_rpnet_ddp/RPNet-e100.pth')
-Loading RPNet pretrained: runs/train_rpnet_ddp/RPNet-e100.pth
-torch.Size([1, 242])
-lp_name: 皖A256R2
-Save to runs/4_rpnet.jpg
+## Add recognition
+
+Train license plate recognition algorithm using [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
+
+```shell
+$ git submodule add https://github.com/zjykzj/crnn-ctc.git ./crnn_ctc
 ```
 
-![](./assets/4_rpnet.jpg)
+Then predicting license plates
+
+```shell
+$ python3 segment/predict_plate.py --weights runs/yolov5n-seg_ccpd-green.pt --w-for-recog runs/crnn-plate-e100.pth --source ./assets/ccpd_green/
+```
+
+<img src="assets/results/recog/02625-94_253-242&460_494&565-494&565_256&530_242&460_485&480-0_0_3_24_24_29_25_32-76-47.jpg" alt="Image 1" style="width: 200px;"> <img src="assets/results/recog/03521267361111111-104_252-253&406_497&551-493&551_257&476_253&406_497&474-0_0_3_27_33_33_31_24-135-132.jpg" alt="Image 2" style="width: 200px;">
 
 ## Maintainers
 
@@ -123,6 +88,8 @@ Save to runs/4_rpnet.jpg
 
 ## Thanks
 
+* [ultralytics/yolov5](https://github.com/ultralytics/yolov5)
+* [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
 * [detectRecog/CCPD](https://github.com/detectRecog/CCPD)
 * [872699467/CCPD_CNN](https://github.com/872699467/CCPD_CNN)
 * [zjykzj/FastestDet](https://github.com/zjykzj/FastestDet)
