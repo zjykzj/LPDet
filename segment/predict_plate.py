@@ -3,27 +3,8 @@
 Run YOLOv5 segmentation inference on images, videos, directories, streams, etc.
 
 Usage - sources:
-    $ python segment/predict.py --weights yolov5s-seg.pt --source 0                               # webcam
-                                                                  img.jpg                         # image
-                                                                  vid.mp4                         # video
-                                                                  screen                          # screenshot
-                                                                  path/                           # directory
-                                                                  'path/*.jpg'                    # glob
-                                                                  'https://youtu.be/Zgi9g1ksQHc'  # YouTube
-                                                                  'rtsp://example.com/media.mp4'  # RTSP, RTMP, HTTP stream
+    $ python3 segment/predict_plate.py --weights yolov5n-seg_ccpd-green.pt --w-for-recog crnn-plate-e100.pth --source ./assets/ccpd_green/
 
-Usage - formats:
-    $ python segment/predict.py --weights yolov5s-seg.pt                 # PyTorch
-                                          yolov5s-seg.torchscript        # TorchScript
-                                          yolov5s-seg.onnx               # ONNX Runtime or OpenCV DNN with --dnn
-                                          yolov5s-seg_openvino_model     # OpenVINO
-                                          yolov5s-seg.engine             # TensorRT
-                                          yolov5s-seg.mlmodel            # CoreML (macOS-only)
-                                          yolov5s-seg_saved_model        # TensorFlow SavedModel
-                                          yolov5s-seg.pb                 # TensorFlow GraphDef
-                                          yolov5s-seg.tflite             # TensorFlow Lite
-                                          yolov5s-seg_edgetpu.tflite     # TensorFlow Edge TPU
-                                          yolov5s-seg_paddle_model       # PaddlePaddle
 """
 
 import argparse
@@ -49,7 +30,7 @@ from utils.plots import Annotator, colors, save_one_box
 from utils.segment.general import masks2segments, process_mask
 from utils.torch_utils import select_device, smart_inference_mode
 
-from crnn_ctc.predict_plate import predict
+from crnn_ctc.predict_plate import load_model, predict
 
 
 @smart_inference_mode()
@@ -102,6 +83,9 @@ def run(
     model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
+
+    ## Load CRNN-CTC Model
+    model_recog, _ = load_model(w_for_recog, device)
 
     # Dataloader
     bs = 1  # batch_size
@@ -175,12 +159,12 @@ def run(
 
                 # Write results
                 for j, (*xyxy, conf, cls) in enumerate(reversed(det[:, :6])):
-                    print(xyxy)
+                    # print(xyxy)
                     x_min, y_min, x_max, y_max = torch.stack(xyxy).detach().cpu().numpy().astype(int)
                     crop_img = imc[y_min:y_max, x_min:x_max]
                     # cv2.imwrite(f"crop_{j}.jpg", crop_img)
 
-                    title = predict(image=crop_img, pretrained=w_for_recog)
+                    plate = predict(image=crop_img, model=model_recog, device=device)
 
                     if save_txt:  # Write to file
                         segj = segments[j].reshape(-1)  # (n,2) to (n*2)
@@ -191,7 +175,7 @@ def run(
                     if save_img or save_crop or view_img:  # Add bbox to image
                         c = int(cls)  # integer class
                         # label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
-                        label = str(title)
+                        label = str(plate)
                         annotator.box_label(xyxy, label, color=colors(c, True))
                         # annotator.draw.polygon(segments[j], outline=colors(c, True), width=3)
                     if save_crop:
