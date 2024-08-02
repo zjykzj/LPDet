@@ -1,13 +1,35 @@
 # -*- coding: utf-8 -*-
 
 """
-@Time    : 2024/7/20 16:54
 @File    : ccpd2yolo.py
 @Author  : zj
+@Time    : 2024/7/20 16:54
 @Description:
 
-Batch processing, generating YOLO format data
+Download the CCPD2019 and CCPD2020 datasets and store them in the following format:
 
+```text
+.
+├── CCPD2019
+│   ├── ccpd_base
+│   ├── ccpd_blur
+│   ├── ccpd_challenge
+│   ├── ccpd_db
+│   ├── ccpd_fn
+│   ├── ccpd_np
+│   ├── ccpd_rotate
+│   ├── ccpd_tilt
+│   ├── ccpd_weather
+│   ├── LICENSE
+│   ├── README.md
+│   └── splits
+├── CCPD2020
+│   └── ccpd_green
+```
+
+Convert CCPD data files to YOLO format. Note: The 4 key points of the license plate are used:
+
+```text
 ./images/
     train/
         file1.jpg
@@ -25,6 +47,7 @@ Batch processing, generating YOLO format data
     ...
     val/
     test/
+```
 
 """
 
@@ -87,38 +110,86 @@ def show_image():
     cv2.waitKey(0)
 
 
+def save_to_dst(img_path, img_name, dst_image_root):
+    img = cv2.imread(img_path)
+    img_h, img_w = img.shape[:2]
+    target, all_infos = parse_name(img_path, img_h, img_w)
+
+    kps_xy = [[int(eel) for eel in el.split('&')] for el in all_infos[3].split('_')]
+    kps_xy = np.array(kps_xy, dtype=float).reshape(-1, 2) / np.array([img_w, img_h])
+    kps_xy = kps_xy.reshape(-1).tolist()
+
+    dst_img_path = os.path.join(dst_image_root, img_name)
+    shutil.copy(img_path, dst_img_path)
+    dst_label_path = dst_img_path.replace('images', 'labels').replace('.jpg', '.txt')
+    np.savetxt(dst_label_path, [[0, *kps_xy]], delimiter=' ', fmt='%s')
+
+
+def process_ccpd2019(data_root, dst_root):
+    for name in ['splits/train.txt', 'splits/val.txt', 'splits/test.txt']:
+        txt_path = os.path.join(data_root, name)
+        assert os.path.isfile(txt_path), txt_path
+        print('*' * 100)
+        print(f"Getting {txt_path} data...")
+
+        cls_name = os.path.basename(name).split('.')[0]
+        dst_image_root = os.path.join(dst_root, 'images', cls_name)
+        dst_label_root = os.path.join(dst_root, 'labels', cls_name)
+        if not os.path.exists(dst_image_root):
+            os.makedirs(dst_image_root)
+        if not os.path.exists(dst_label_root):
+            os.makedirs(dst_label_root)
+        print(f"Save to {dst_image_root}")
+
+        with open(txt_path, 'r') as f:
+            for line in tqdm(f.readlines()):
+                line = line.strip()
+                if line == '':
+                    continue
+
+                img_path = os.path.join(data_root, line)
+                assert os.path.isfile(img_path), img_path
+                assert img_path.endswith('.jpg'), img_path
+
+                save_to_dst(img_path, os.path.basename(img_path), dst_image_root)
+
+
+def process_ccpd2020(data_root, dst_root):
+    for name in ['train', 'val', 'test']:
+        data_dir = os.path.join(data_root, name)
+        assert os.path.isdir(data_dir), data_dir
+        print('*' * 100)
+        print(f"Getting {data_dir} data...")
+
+        dst_image_root = os.path.join(dst_root, 'images', name)
+        dst_label_root = os.path.join(dst_root, 'labels', name)
+        if not os.path.exists(dst_image_root):
+            os.makedirs(dst_image_root)
+        if not os.path.exists(dst_label_root):
+            os.makedirs(dst_label_root)
+        print(f"Save to {dst_image_root}")
+
+        for img_name in tqdm(os.listdir(data_dir)):
+            img_path = os.path.join(data_dir, img_name)
+            assert os.path.isfile(img_path), img_path
+            assert img_path.endswith('.jpg'), img_path
+
+            save_to_dst(img_path, img_name, dst_image_root)
+
+
 def main():
-    # data_root = "../datasets/ccpd/CCPD2020/ccpd_green/train"
-    # cls_name = "train"
-    # data_root = "../datasets/ccpd/CCPD2020/ccpd_green/val"
-    # cls_name = "val"
-    data_root = "../datasets/ccpd/CCPD2020/ccpd_green/test"
-    cls_name = "test"
+    dst_root = "../datasets/chinese_license_plate/det"
+    data_root = "../datasets/ccpd"
 
-    dst_root = "../datasets/ccpd/CCPD2020/ccpd_green/yololike"
-    dst_image_root = os.path.join(dst_root, 'images', cls_name)
-    dst_label_root = os.path.join(dst_root, 'labels', cls_name)
-    if not os.path.exists(dst_image_root):
-        os.makedirs(dst_image_root)
-    if not os.path.exists(dst_label_root):
-        os.makedirs(dst_label_root)
+    ccpd2019_root = os.path.join(data_root, "CCPD2019")
+    if os.path.isdir(ccpd2019_root):
+        print(f"Process {ccpd2019_root}")
+        process_ccpd2019(ccpd2019_root, os.path.join(dst_root, "CCPD2019"))
 
-    for img_name in tqdm(os.listdir(data_root)):
-        img_path = os.path.join(data_root, img_name)
-        assert os.path.isfile(img_path), img_path
-
-        img = cv2.imread(img_path)
-        img_h, img_w = img.shape[:2]
-        target, all_infos = parse_name(img_path, img_h, img_w)
-
-        kps_xy = [[int(eel) for eel in el.split('&')] for el in all_infos[3].split('_')]
-        kps_xy = np.array(kps_xy, dtype=float).reshape(-1, 2) / np.array([img_w, img_h])
-        kps_xy = kps_xy.reshape(-1).tolist()
-
-        dst_img_path = os.path.join(dst_image_root, img_name)
-        shutil.copy(img_path, dst_img_path)
-        dst_label_path = dst_img_path.replace('images', 'labels').replace('.jpg', '.txt')
-        np.savetxt(dst_label_path, [[0, *kps_xy]], delimiter=' ', fmt='%s')
+    ccpd2020_root = os.path.join(data_root, "CCPD2020", "ccpd_green")
+    if os.path.isdir(ccpd2020_root):
+        print(f"Process {ccpd2020_root}")
+        process_ccpd2020(ccpd2020_root, os.path.join(dst_root, "CCPD2020"))
 
 
 if __name__ == '__main__':
