@@ -65,7 +65,7 @@ $ python segment/predict.py --weights runs/yolov5n-seg_ccpd-green.pt --source ./
 Train license plate recognition algorithm using [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
 
 ```shell
-$ git submodule add https://github.com/zjykzj/crnn-ctc.git ./crnn_ctc
+$ git submodule update
 ```
 
 Then predicting license plates
