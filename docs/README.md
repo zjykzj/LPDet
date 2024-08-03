@@ -4,7 +4,7 @@
 ## TRAIN
 
 ```shell
-$ python segment/train.py --data ChineseLicensePlate-seg.yaml --weights yolov5n-seg.pt --img 640 --device 7 --epoch 10
+$ python segment/train.py --data ChineseLicensePlate-seg.yaml --weights yolov5n-seg.pt --img 640 --device 0 --epoch 10
 ...
 ...
       Epoch    GPU_mem   box_loss   seg_loss   obj_loss   cls_loss  Instances       Size
@@ -27,7 +27,7 @@ Results saved to runs/train-seg/exp2
 ## EVAL
 
 ```shell
-$ python segment/val.py --weights runs/train-seg/exp2/weights/best.pt --data ChineseLicensePlate-seg.yaml --img 640 --device 7
+$ python segment/val.py --weights yolov5n-seg_plate.pt --data ChineseLicensePlate-seg.yaml --img 640 --device 0
 ...
 ...
 Model summary: 165 layers, 1879750 parameters, 0 gradients, 6.7 GFLOPs
