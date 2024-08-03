@@ -30,7 +30,7 @@ from utils.plots import Annotator, colors, save_one_box
 from utils.segment.general import masks2segments, process_mask
 from utils.torch_utils import select_device, smart_inference_mode
 
-from crnn_ctc.predict_plate import load_model, predict
+from crnn_ctc.predict_plate import load_crnn, predict_crnn
 
 
 @smart_inference_mode()
@@ -85,7 +85,7 @@ def run(
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
     ## Load CRNN-CTC Model
-    model_recog, _ = load_model(w_for_recog, device)
+    model_recog, _ = load_crnn(w_for_recog, device)
 
     # Dataloader
     bs = 1  # batch_size
@@ -164,7 +164,7 @@ def run(
                     crop_img = imc[y_min:y_max, x_min:x_max]
                     # cv2.imwrite(f"crop_{j}.jpg", crop_img)
 
-                    plate = predict(image=crop_img, model=model_recog, device=device)
+                    plate = predict_crnn(image=crop_img, model=model_recog, device=device)
 
                     if save_txt:  # Write to file
                         segj = segments[j].reshape(-1)  # (n,2) to (n*2)
