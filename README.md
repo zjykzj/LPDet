@@ -34,6 +34,7 @@ Implementing license plate detection, segmentation, and recognition functions ba
 
 | Version                                                       | Release Date | Major Updates                                                                                                                           |
 |---------------------------------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [v1.1.0](https://github.com/zjykzj/LPDet/releases/tag/v1.1.0) | 2024/08/04   | Optimize license plate segmentation and recognition algorithms.                                                                         |
 | [v1.0.0](https://github.com/zjykzj/LPDet/releases/tag/v1.0.0) | 2024/07/21   | Implementing license plate detection, segmentation, and recognition functions.                                                          |
 | [v0.3.0](https://github.com/zjykzj/LPDet/releases/tag/v0.3.0) | 2023/10/03   | Support for Automatic Mixed Precision (AMP) training.                                                                                   |
 | [v0.2.0](https://github.com/zjykzj/LPDet/releases/tag/v0.2.0) | 2023/10/02   | Support for distributed training with multi-GPUs.                                                                                       |
