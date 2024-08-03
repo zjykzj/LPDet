@@ -47,15 +47,15 @@ This warehouse provides a complete license plate detection and recognition algor
 
 ### Detect + Seg
 
-Firstly, download CCPD2020([Google Drive](https://drive.google.com/file/d/1m8w1kFxnCEiqz_-t2vTcgrgqNIv986PR/view?usp=sharing)); Then, use the script [ccpd2yolo.py](./ccpd2yolo.py) to convert the dataset to YOLO format.
+* ChineseLicensePlate: [Baidu Drive](https://pan.baidu.com/s/1fQh0E9c6Z4satvrEthKevg)(ad7l)
 
 ```shell
 # Train
-$ python segment/train.py --data ccpd-seg.yaml --weights yolov5n-seg.pt --img 640
+$ python segment/train.py --data ChineseLicensePlate-seg.yaml --weights yolov5n-seg.pt --img 640 --epoch 10
 # Eval
-$ python segment/val.py --weights runs/yolov5n-seg_ccpd-green.pt --data ccpd-seg.yaml --img 640
+$ python segment/val.py --weights yolov5n-seg_plate.pt --data ChineseLicensePlate-seg.yaml --img 640
 # Predict
-$ python segment/predict.py --weights runs/yolov5n-seg_ccpd-green.pt --source ./assets/ccpd_green/
+$ python segment/predict.py --weights yolov5n-seg_plate.pt --source ./assets/ccpd_green/
 ```
 
 <img src="assets/results/predict/02625-94_253-242&460_494&565-494&565_256&530_242&460_485&480-0_0_3_24_24_29_25_32-76-47.jpg" alt="Image1" style="width: 200px;"> <img src="assets/results/predict/03521267361111111-104_252-253&406_497&551-493&551_257&476_253&406_497&474-0_0_3_27_33_33_31_24-135-132.jpg" alt="Image 2" style="width: 200px;">
@@ -65,13 +65,14 @@ $ python segment/predict.py --weights runs/yolov5n-seg_ccpd-green.pt --source ./
 Train license plate recognition algorithm using [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
 
 ```shell
+$ git submodule init
 $ git submodule update
 ```
 
 Then predicting license plates
 
 ```shell
-$ python3 segment/predict_plate.py --weights runs/yolov5n-seg_ccpd-green.pt --w-for-recog runs/crnn-plate-e100.pth --source ./assets/ccpd_green/
+$ python3 segment/predict_plate.py --weights yolov5n-seg_plate.pt --w-for-recog crnn_tiny-plate-b512-e100.pth --source ./assets/ccpd_green/
 ```
 
 <img src="assets/results/recog/02625-94_253-242&460_494&565-494&565_256&530_242&460_485&480-0_0_3_24_24_29_25_32-76-47.jpg" alt="Image 1" style="width: 200px;"> <img src="assets/results/recog/03521267361111111-104_252-253&406_497&551-493&551_257&476_253&406_497&474-0_0_3_27_33_33_31_24-135-132.jpg" alt="Image 2" style="width: 200px;">
