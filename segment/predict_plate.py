@@ -3,7 +3,7 @@
 Run YOLOv5 segmentation inference on images, videos, directories, streams, etc.
 
 Usage - sources:
-    $ python3 segment/predict_plate.py --weights yolov5n-seg_ccpd-green.pt --w-for-recog crnn-plate-e100.pth --source ./assets/ccpd_green/
+    $ python3 segment/predict_plate.py --weights yolov5n-seg_plate.pt --w-for-recog crnn_tiny-plate-b512-e100.pth --source ./assets/ccpd/
 
 """
 
@@ -30,7 +30,9 @@ from utils.plots import Annotator, colors, save_one_box
 from utils.segment.general import masks2segments, process_mask
 from utils.torch_utils import select_device, smart_inference_mode
 
-from crnn_ctc.predict_plate import load_crnn, predict_crnn
+from crnn_ctc.predict_plate import predict_crnn
+from crnn_ctc.utils.general import load_crnn
+from crnn_ctc.utils.dataset.plate import PLATE_CHARS
 
 
 @smart_inference_mode()
@@ -85,7 +87,11 @@ def run(
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
     ## Load CRNN-CTC Model
-    model_recog, _ = load_crnn(w_for_recog, device)
+    model_recog, _ = load_crnn(pretrained=w_for_recog, device=device, shape=(1, 3, 48, 168),
+                               num_classes=len(PLATE_CHARS),
+                               not_tiny=False, use_lstm=False)
+    recog_time = 0
+    recog_num = 0
 
     # Dataloader
     bs = 1  # batch_size
@@ -164,7 +170,9 @@ def run(
                     crop_img = imc[y_min:y_max, x_min:x_max]
                     # cv2.imwrite(f"crop_{j}.jpg", crop_img)
 
-                    plate = predict_crnn(image=crop_img, model=model_recog, device=device)
+                    plate, predict_time = predict_crnn(image=crop_img, model=model_recog, device=device)
+                    recog_time += predict_time
+                    recog_num += 1
 
                     if save_txt:  # Write to file
                         segj = segments[j].reshape(-1)  # (n,2) to (n*2)
@@ -216,7 +224,9 @@ def run(
 
     # Print results
     t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
-    LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
+    LOGGER.info(
+        f'Detect+Seg Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
+    LOGGER.info(f"Recog Speed: {recog_time / recog_num:.1f}ms per image at shape {(1, 3, 48, 168)} ")
     if save_txt or save_img:
         s = f"\n{len(list(save_dir.glob('labels/*.txt')))} labels saved to {save_dir / 'labels'}" if save_txt else ''
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
