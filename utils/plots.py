@@ -77,6 +77,10 @@ class Annotator:
         if self.pil:  # use PIL
             self.im = im if isinstance(im, Image.Image) else Image.fromarray(im)
             self.draw = ImageDraw.Draw(self.im)
+
+            # ERROR: UnicodeEncodeError: 'latin-1' codec can't encode character '\u7696' in position 0: ordinal not in range(256)
+            # FIX: cp assets/fonts/HanYiZhongJianHei-2.ttf /home/user/.config/Ultralytics/
+
             # self.font = check_pil_font(font='Arial.Unicode.ttf' if non_ascii else font,
             self.font = check_pil_font(font='HanYiZhongJianHei-2.ttf' if non_ascii else font,
                                        size=font_size or max(round(sum(self.im.size) / 2 * 0.035), 12))
