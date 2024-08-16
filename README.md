@@ -15,6 +15,8 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
+ONLINE DEMO：[LICENSE PLATE DETECT/SEGMENT/RECOG](https://blog.zjykzj.cn/gradio/plate_lpdet/)
+
 Implementing license plate detection, segmentation, and recognition functions based on [ultralytics/yolov5 v7.0](https://github.com/ultralytics/yolov5/releases/tag/v7.0) and [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
 
 | **Model<br>Segmentation** | **Input Shape** | **GFLOPs** | **Model Size (MB)** | **Speed<br>RTX 3090 b1<br>(ms)** |  **ChineseLicensePlate<br>mAP50 (%)**   | **Training Data** | **Testing Data** |
@@ -41,6 +43,7 @@ Implementing license plate detection, segmentation, and recognition functions ba
 
 | Version                                                       | Release Date | Major Updates                                                                                                                           |
 |---------------------------------------------------------------|--------------|-----------------------------------------------------------------------------------------------------------------------------------------|
+| [v1.2.0](https://github.com/zjykzj/LPDet/releases/tag/v1.2.0) | 2024/08/17   | Add ONNX inference and Gradio demo.                                                                                                     |
 | [v1.1.0](https://github.com/zjykzj/LPDet/releases/tag/v1.1.0) | 2024/08/04   | Optimize license plate segmentation and recognition algorithms.                                                                         |
 | [v1.0.0](https://github.com/zjykzj/LPDet/releases/tag/v1.0.0) | 2024/07/21   | Implementing license plate detection, segmentation, and recognition functions.                                                          |
 | [v0.3.0](https://github.com/zjykzj/LPDet/releases/tag/v0.3.0) | 2023/10/03   | Support for Automatic Mixed Precision (AMP) training.                                                                                   |
