@@ -93,6 +93,10 @@ class Annotator:
         if self.pil or not is_ascii(label):
             self.draw.rectangle(box, width=self.lw, outline=color)  # box
             if label:
+                # ERROR: AttributeError: 'FreeTypeFont' object has no attribute 'getsize'
+                # DeprecationWarning: getsize is deprecated and will be removed in Pillow 10 (2023-07-01). Use getbbox or getlength instead.
+                # FIX: https://github.com/tensorflow/models/issues/11040
+                # pip install Pillow==9.5.0 -i https://pypi.tuna.tsinghua.edu.cn/simple
                 w, h = self.font.getsize(label)  # text width, height
                 outside = box[1] - h >= 0  # label fits outside box
                 self.draw.rectangle(
