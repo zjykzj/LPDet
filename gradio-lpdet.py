@@ -14,6 +14,7 @@ from pathlib import Path
 
 import numpy as np
 import gradio as gr
+from datetime import datetime
 
 import torch
 
@@ -32,13 +33,22 @@ from utils.augmentations import letterbox
 
 from crnn_ctc.predict_plate import predict_crnn
 
+save_root = "./runs/"
+if not os.path.exists(save_root):
+    os.makedirs(save_root)
+
+# Load model
+device = select_device("cpu")
+model = DetectMultiBackend("./yolov5n-seg_plate.onnx", device=device, dnn=False, data=None, fp16=False)
+
+model_recog = DetectMultiBackend("./crnn_tiny-plate.onnx", device=device, dnn=False, data=None, fp16=False)
+
 
 @smart_inference_mode()
 def run(
         im0,
-        weights=ROOT / 'yolov5s-seg.pt',  # model.pt path(s)
-        w_for_recog=ROOT / 'crnn-plate-e100.pth',  # model.pt path(s)
-        data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
+        model,
+        model_recog,
         imgsz=(640, 640),  # inference size (height, width)
         conf_thres=0.25,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
@@ -48,18 +58,12 @@ def run(
         agnostic_nms=False,  # class-agnostic NMS
         augment=False,  # augmented inference
         line_thickness=3,  # bounding box thickness (pixels)
-        half=False,  # use FP16 half-precision inference
-        dnn=False,  # use OpenCV DNN for ONNX inference
 ):
     # Load model
-    device = select_device(device)
-    model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
     ## Load CRNN-CTC Model
-    # print(f"w_for_recog: {w_for_recog} - type: {type(w_for_recog)}")
-    model_recog = DetectMultiBackend(w_for_recog, device=device, dnn=False, data=None, fp16=False)
     recog_time = 0
     recog_num = 0
 
@@ -139,11 +143,18 @@ def run(
 
 
 def predict(inp):
+    # 获取当前日期和时间
+    now = datetime.now()
+    # 格式化为字符串，例如 "2024-08-16_21-37-00"
+    formatted_time = now.strftime("%Y-%m-%d_%H-%M-%S")
+    inp.save(os.path.join(save_root, f"{formatted_time}.jpg"))
+
     image = np.array(inp)
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
 
-    image = run(image, weights="./yolov5n-seg_plate.onnx", w_for_recog="./crnn_tiny-plate.onnx")
+    image = run(image, model, model_recog, device=device)
 
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
 
