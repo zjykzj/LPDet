@@ -15,7 +15,7 @@
   <a href="http://commitizen.github.io/cz-cli/"><img src="https://img.shields.io/badge/commitizen-friendly-brightgreen.svg" alt=""></a>
 </p>
 
-Implementing license plate detection, segmentation, and recognition functions based on [YOLOv5-v7.0](https://github.com/ultralytics/yolov5/releases/tag/v7.0) and [CRNN-CTC](https://github.com/zjykzj/crnn-ctc)
+Implementing license plate detection, segmentation, and recognition functions based on [ultralytics/yolov5 v7.0](https://github.com/ultralytics/yolov5/releases/tag/v7.0) and [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
 
 | **Model<br>Segmentation** | **Input Shape** | **GFLOPs** | **Model Size (MB)** | **Speed<br>RTX 3090 b1<br>(ms)** |  **ChineseLicensePlate<br>mAP50 (%)**   | **Training Data** | **Testing Data** |
 |:-------------------------:|:---------------:|:----------:|:-------------------:|:--------------------------------:|:---------------------------------------:|:-----------------:|:----------------:|
@@ -51,6 +51,8 @@ Implementing license plate detection, segmentation, and recognition functions ba
 
 This warehouse provides a complete license plate detection and recognition algorithm, with the goal of perfectly detecting and recognizing all license plates and license plate information.
 
+Note: the latest implementation in our warehouse is entirely based on [ultralytics/yolov5 v7.0](https://github.com/ultralytics/yolov5/releases/tag/v7.0)
+
 ## Usage
 
 ### Detect + Seg
@@ -70,7 +72,7 @@ $ python segment/predict.py --weights yolov5n-seg_plate.pt --source ./assets/ccp
 
 ### Recog
 
-Train license plate recognition algorithm using [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
+About license plate recognition algorithm, using [zjykzj/crnn-ctc](https://github.com/zjykzj/crnn-ctc)
 
 ```shell
 $ git submodule init
@@ -80,7 +82,10 @@ $ git submodule update
 Then predicting license plates
 
 ```shell
+# Using Pytorch
 $ python3 segment/predict_plate.py --weights yolov5n-seg_plate.pt --w-for-recog crnn_tiny-plate-b512-e100.pth --source ./assets/ccpd/
+# Using ONNXRuntime
+$ python3 segment/predict_plate.py --weights yolov5n-seg_plate.onnx --w-for-recog crnn_tiny-plate.onnx --source ./assets/ccpd/ --device cpu
 ```
 
 <img src="assets/results/recog/0290-8_4-462&542_677&655-677&626_481&655_462&571_658&542-0_0_17_32_33_25_6-96-25.jpg" alt="Image1" style="width: 200px;"> <img src="assets/results/recog/3124-7_17-0&287_719&650-704&558_0&650_36&379_719&287-0_0_20_31_8_33_33-78-187.jpg" alt="Image 2" style="width: 200px;"> <img src="assets/results/recog/30475-102_79-197&428_501&586-500&586_207&515_197&428_501&492-0_0_5_24_30_31_32_33-122-444.jpg" alt="Image1" style="width: 200px;"> <img src="assets/results/recog/03905411877394636-92_250-173&509_520&612-520&612_197&592_173&509_501&525-0_0_3_29_29_33_33_33-101-53.jpg" alt="Image 2" style="width: 200px;">
