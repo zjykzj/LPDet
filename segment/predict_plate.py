@@ -2,8 +2,11 @@
 """
 Run YOLOv5 segmentation inference on images, videos, directories, streams, etc.
 
-Usage - sources:
+Usage - Predict Plates using Pytorch:
     $ python3 segment/predict_plate.py --weights yolov5n-seg_plate.pt --w-for-recog crnn_tiny-plate-b512-e100.pth --source ./assets/ccpd/
+
+Usage - Predict Plates using ONNXRuntime:
+    $ python3 segment/predict_plate.py --weights yolov5n-seg_plate.onnx --w-for-recog crnn_tiny-plate.onnx --source ./assets/ccpd/ --device cpu
 
 """
 
@@ -87,9 +90,13 @@ def run(
     imgsz = check_img_size(imgsz, s=stride)  # check image size
 
     ## Load CRNN-CTC Model
-    model_recog, _ = load_crnn(pretrained=w_for_recog, device=device, shape=(1, 3, 48, 168),
-                               num_classes=len(PLATE_CHARS),
-                               not_tiny=False, use_lstm=False)
+    # print(f"w_for_recog: {w_for_recog} - type: {type(w_for_recog)}")
+    if w_for_recog[0].endswith('.onnx'):
+        model_recog = DetectMultiBackend(w_for_recog, device=device, dnn=False, data=None, fp16=False)
+    else:
+        model_recog, _ = load_crnn(pretrained=w_for_recog, device=device, shape=(1, 3, 48, 168),
+                                   num_classes=len(PLATE_CHARS),
+                                   not_tiny=False, use_lstm=False)
     recog_time = 0
     recog_num = 0
 
