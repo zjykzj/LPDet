@@ -40,6 +40,8 @@ if not os.path.exists(save_root):
 # Load model
 device = select_device("cpu")
 model = DetectMultiBackend("./yolov5n-seg_plate.onnx", device=device, dnn=False, data=None, fp16=False)
+imgsz = (640, 640)
+model.warmup(imgsz=(1, 3, *imgsz))  # warmup
 
 model_recog = DetectMultiBackend("./crnn_tiny-plate.onnx", device=device, dnn=False, data=None, fp16=False)
 
@@ -69,7 +71,6 @@ def run(
 
     # Run inference
     bs = 1
-    model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
     seen, windows, dt = 0, [], (Profile(), Profile(), Profile())
 
     img_size = 640
@@ -133,11 +134,12 @@ def run(
         # Stream results
         im0 = annotator.result()
 
-    # Print results
-    t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
-    LOGGER.info(
-        f'Detect+Seg Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
-    LOGGER.info(f"Recog Speed: {recog_time / recog_num:.1f}ms per image at shape {(1, 3, 48, 168)} ")
+    if recog_num > 0:
+        # Print results
+        t = tuple(x.t / seen * 1E3 for x in dt)  # speeds per image
+        LOGGER.info(
+            f'Detect+Seg Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
+        LOGGER.info(f"Recog Speed: {recog_time / recog_num:.1f}ms per image at shape {(1, 3, 48, 168)} ")
 
     return im0
 
